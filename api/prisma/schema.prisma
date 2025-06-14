@@ -28,10 +28,10 @@ model User {
   id       Int      @id @default(autoincrement())
   email    String   @unique
   password String
+  otp_code Int?
   role     Role     @default(STUDENT)
   profile  Profile?
 }
-
 
 model Profile {
   id               String           @id @default(uuid())
@@ -44,9 +44,9 @@ model Profile {
   user_id          Int              @unique
   user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   progress         CourseProgress[]
-  quize_submitions QuizeSubmition []
+  quize_submitions QuizeSubmition[]
   ratings          Rating[]
-  payments Payment[]
+  payments         Payment[]
 }
 
 model Course {
@@ -67,7 +67,7 @@ model Course {
   created_at    DateTime         @default(now())
   progress      CourseProgress[]
   deleted_at    DateTime?
-  payments Payment[]
+  payments      Payment[]
   updated_at    DateTime         @updatedAt
 }
 
@@ -89,7 +89,7 @@ model Quize {
   section    Section  @relation(fields: [section_id], references: [id], onDelete: Cascade)
 }
 
-model QuizeSubmition  {
+model QuizeSubmition {
   student_id String
   quize_id   Int
   is_passed  Boolean
@@ -155,17 +155,16 @@ model CourseProgress {
   @@id([student_id, course_id])
 }
 
-
 model Payment {
   id         String   @id @default(cuid())
   student_id String
   course_id  String
   amount     Decimal  @db.Decimal(10, 2)
-  status     String   // e.g., "SUCCESS", "FAILED", "PENDING"
+  status     String // e.g., "SUCCESS", "FAILED", "PENDING"
   paid_at    DateTime @default(now())
 
-  student    Profile  @relation(fields: [student_id], references: [id], onDelete: Cascade)
-  course     Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  student Profile @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
 
   @@unique([student_id, course_id])
 }

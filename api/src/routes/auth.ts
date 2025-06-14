@@ -1,8 +1,10 @@
 import { Router } from "express";
+import { login, register } from "../controllers/auth";
 
 const router = Router();
 
-router.post("/login",(req,res):any=>{
-    return res.status(200).json({message:"auth route"});
-});
+router.post("/login", login);
+
+
+router.post("/register", register);
 export default router;
