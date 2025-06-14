@@ -1,10 +1,12 @@
 import { Avatar, Box, Heading, Image, Text, Link, Button, FormatNumber } from "@chakra-ui/react"
 import type React from "react"
 import { FaStar } from "react-icons/fa"
+import { useNavigate } from "react-router-dom"
 
 
 
 type Props = {
+    id:number
     title: string
     description: string
     author: { avatar: string, username: string }
@@ -12,10 +14,11 @@ type Props = {
     price: number
     rating: number
 }
-const CourseCard: React.FC<Props> = ({ thumbnail_url, title, description, author, rating, price }) => {
+const CourseCard: React.FC<Props> = ({ thumbnail_url, title, description, author, rating, price, id }) => {
+    const redirect = useNavigate();
     return (
 
-        <Box w={"300px"} bg={"white"} shadow={"xs"} cursor={"pointer"} _hover={{scale:1.05}}  transition="scale 150ms linear" borderTopRadius={5}>
+        <Box onClick={()=>redirect(`/courses/${id}`)} w={"300px"} bg={"white"} shadow={"xs"} cursor={"pointer"} _hover={{scale:1.05}}  transition="scale 150ms linear" borderTopRadius={5}>
 
             <Image borderTopRadius={5} src={thumbnail_url} w={"full"} />
 

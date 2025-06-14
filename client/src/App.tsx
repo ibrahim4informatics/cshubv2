@@ -5,6 +5,7 @@ import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import {ChakraProvider, createSystem, defaultConfig} from "@chakra-ui/react";
 import Courses from "./pages/Courses";
 import Welcome from "./pages/Welcome";
+import SingleCourse from "./pages/SingleCourse";
 function App() {
 
 
@@ -24,6 +25,13 @@ function App() {
      {
       path:"/courses",
       element:<Courses/>,
+      errorElement:<h1>Error</h1>
+    },
+
+
+         {
+      path:"/courses/:id",
+      element:<SingleCourse/>,
       errorElement:<h1>Error</h1>
     },
   ])

@@ -1,0 +1,171 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum CourseType {
+  FREE
+  PAID
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  email    String   @unique
+  password String
+  role     Role     @default(STUDENT)
+  profile  Profile?
+}
+
+
+model Profile {
+  id               String           @id @default(uuid())
+  first_name       String           @db.VarChar(35)
+  last_name        String           @db.VarChar(35)
+  bio              String?          @db.LongText
+  joined_at        DateTime         @default(now())
+  enrollements     Enrollement[]
+  created_courses  Course[]         @relation(name: "course_owner")
+  user_id          Int              @unique
+  user             User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  progress         CourseProgress[]
+  quize_submitions QuizeSubmition []
+  ratings          Rating[]
+  payments Payment[]
+}
+
+model Course {
+  id            String           @id @default(uuid())
+  title         String           @db.VarChar(150)
+  description   String           @db.LongText
+  sections      Section[]
+  is_featured   Boolean          @default(false)
+  ratings       Rating[]
+  requirements  Requirement[]
+  category_id   Int?
+  category      Category?        @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  instructor_id String
+  instructor    Profile          @relation(name: "course_owner", fields: [instructor_id], references: [id], onDelete: Cascade)
+  enrolments    Enrollement[]
+  price         Decimal          @db.Decimal(10, 2)
+  type          CourseType
+  created_at    DateTime         @default(now())
+  progress      CourseProgress[]
+  deleted_at    DateTime?
+  payments Payment[]
+  updated_at    DateTime         @updatedAt
+}
+
+model Section {
+  id        Int              @id @default(autoincrement())
+  title     String           @db.VarChar(150)
+  content   String           @db.LongText
+  course_id String
+  quizes    Quize[]
+  course    Course           @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  progress  CourseProgress[]
+}
+
+model Quize {
+  id         Int      @id @default(autoincrement())
+  quetion    String
+  choices    Choice[]
+  section_id Int
+  section    Section  @relation(fields: [section_id], references: [id], onDelete: Cascade)
+}
+
+model QuizeSubmition  {
+  student_id String
+  quize_id   Int
+  is_passed  Boolean
+  grade      Decimal @db.Decimal(2, 2)
+  student    Profile @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@id([student_id, quize_id])
+}
+
+model Choice {
+  id         Int     @id @default(autoincrement())
+  answer     String
+  quize_id   Int
+  is_correct Boolean
+  quize      Quize   @relation(fields: [quize_id], references: [id], onDelete: Cascade)
+}
+
+model Rating {
+  profile_id   String
+  course_id    String
+  rater        Profile  @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  rated_course Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  value        Decimal  @db.Decimal(1, 1)
+  created_at   DateTime @default(now())
+
+  @@id([profile_id, course_id])
+}
+
+model Enrollement {
+  student_id String
+  course_id  String
+  student    Profile @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  course     Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
+
+  @@id([student_id, course_id])
+}
+
+model Requirement {
+  id        Int    @id @default(autoincrement())
+  content   String
+  course_id String
+  course    Course @relation(fields: [course_id], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id      Int      @id @default(autoincrement())
+  name    String   @db.VarChar(150)
+  courses Course[]
+}
+
+model CourseProgress {
+  student_id         String
+  course_id          String
+  current_section_id Int
+  completed          Boolean   @default(false)
+  started_date       DateTime
+  completed_date     DateTime?
+
+  student         Profile @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  course          Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  current_section Section @relation(fields: [current_section_id], references: [id], onDelete: Cascade)
+
+  @@id([student_id, course_id])
+}
+
+
+model Payment {
+  id         String   @id @default(cuid())
+  student_id String
+  course_id  String
+  amount     Decimal  @db.Decimal(10, 2)
+  status     String   // e.g., "SUCCESS", "FAILED", "PENDING"
+  paid_at    DateTime @default(now())
+
+  student    Profile  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  course     Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+
+  @@unique([student_id, course_id])
+}

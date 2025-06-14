@@ -18,6 +18,7 @@ const Courses = () => {
             <Box p={4} w={"full"} maxW={1024} mx={"auto"} display={"grid"} placeItems={"center"} gridTemplateColumns={{base:"repeat(1,1fr)",md:"repeat(2,1fr)",lg:"repeat(3,1fr)"}} gapY={4}>
 
                 <CourseCard
+                id={1}
                     title="Nest js Beginner:The Ultimate Guide to Modern Web Solutions"
                     author={{
                         avatar: "",
@@ -31,6 +32,7 @@ const Courses = () => {
 
 
                 <CourseCard
+                    id={2}
                     title="Nest js Beginner:The Ultimate Guide to Modern Web Solutions"
                     author={{
                         avatar: "",
@@ -44,6 +46,7 @@ const Courses = () => {
 
 
                 <CourseCard
+                id={3}
                     title="Nest js Beginner:The Ultimate Guide to Modern Web Solutions"
                     author={{
                         avatar: "",
@@ -57,6 +60,7 @@ const Courses = () => {
 
 
                 <CourseCard
+                    id={4}
                     title="Nest js Beginner:The Ultimate Guide to Modern Web Solutions"
                     author={{
                         avatar: "",
