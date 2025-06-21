@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
-import { LoginUserSchema, RegisterUserSchema } from "../schemas/users";
+import { LoginUserSchema, RegisterUserSchema, UserResetPasswordSchema } from "../schemas/users";
 import { z } from "zod";
 import prisma from "../config/database";
 import { BcryptService } from "../config/bcrypt.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import otpGenerator from "otp-generator";
 import { JwtService } from "../config/jwt.service";
+import { Mailer } from "../config/nodemailer.service";
 function errorExtractor(errorObj: z.ZodError) {
     return errorObj.issues.map(err => { return { field: err.path.join(), message: err.message } });
 }
@@ -74,10 +76,125 @@ const login = async (req: Request, res: Response): Promise<any> => {
         return res.status(500).json({ error })
     }
 }
-const passwordResetOtpSetter = (request: Request, res: Response) => { }
+const passwordResetOtpSender = async (request: Request, res: Response): Promise<any> => {
+    const body = UserResetPasswordSchema.safeParse(request.body);
+
+    if (!body.success) {
+        return res.status(400).json({ message: "Otp is not sent due to data format", errors: errorExtractor(body.error) });
+    }
+
+    try {
+
+        const user = await prisma.user.findUnique({ where: { email: body.data.email } });
+        if (!user) {
+            return res.status(404).json({ message: "Otp is not sent no user matche the email provided" });
+        }
+
+
+        const otp = Number.parseInt(otpGenerator.generate(4, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false }));
+
+        try {
+
+            await prisma.user.update({ where: { email: body.data.email }, data: { otp_code: otp } });
+
+            //todo : send using nodemailer
+
+            const mailSender = Mailer.getMailer();
+
+            mailSender.sendMail({
+                from: 'CSHUB <ibrahimelkhalilbenyahia@gmail.com>',
+                subject: "Reset Password Otp",
+                to: user.email,
+                html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CSHUB OTP Reset</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+  <table align="center" width="100%" cellpadding="0" cellspacing="0" style="padding: 20px 0;">
+    <tr>
+      <td align="center">
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow: hidden;">
+          <tr>
+            <td style="background-color: #007BFF; padding: 20px; color: #ffffff; text-align: center;">
+              <h1 style="margin: 0;">CSHUB</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 30px; text-align: center;">
+              <h2 style="color: #333;">Reset Your Password</h2>
+              <p style="color: #555;">Use the OTP below to reset your password. It is valid for the next 10 minutes.</p>
+              <div style="font-size: 32px; font-weight: bold; letter-spacing: 4px; margin: 20px auto; color: #007BFF;">${otp}</div>
+              <p style="color: #777;">If you didn’t request this, you can ignore this email.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f4f4f4; padding: 15px; text-align: center; font-size: 12px; color: #888;">
+              © 2025 CSHUB. All rights reserved.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
+            })
+
+            return res.status(200).json({ message: "Otp is sent successfully" });
+
+        }
+
+        catch (error) {
+            return res.status(500).json({ message: "Server error otp is not sent", error: error || null })
+        }
+    }
+
+    catch (error) {
+
+        return res.status(500).json({ message: "Server error otp is not sent", error: error || null });
+    }
+
+
+}
+
+
+const checkOtpValidation = async (req: Request, res: Response): Promise<any> => {
+
+    const schemas = z.object({
+        otp: z.number().int(),
+        email: z.string().email()
+    })
+    const body = schemas.safeParse(req.body);
+
+    if (!body.success) {
+        return res.status(400).json({ errors: errorExtractor(body.error) });
+    }
+
+
+    const user = await prisma.user.findUnique({ where: { email: body.data.email } });
+
+    if (!user) {
+        return res.status(401).json({ errors: "invalid email or otp" });
+    }
+
+    if (user.otp_code !== body.data.otp) {
+        return res.status(401).json({ errors: "invalid email or otp" })
+    }
+
+    return res.status(200).json({ message: "this is valid email and otp" });
+
+
+
+
+
+}
 const passwordResetSubmition = (req: Request, res: Response) => { }
 const userStatus = (req: Request, res: Response) => { }
 
 
 
-export { register, login }
+export { register, login, passwordResetOtpSender ,checkOtpValidation}
