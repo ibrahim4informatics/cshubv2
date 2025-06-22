@@ -31,7 +31,7 @@ const SingleCourse = () => {
         <AppLayout>
 
 
-            <Box width={"100%"} bg={"gray.900"} p={8} color={"white"}>
+            <Box width={"100%"} bg={"gray.900"} p={8} color={"white"} position={"sticky"} top={0} left={0} zIndex={2000}>
                 <Heading size={"4xl"}>{course.title} {id}</Heading>
                 <Box display={"flex"} alignItems={"center"} gap={2} my={4}>
                     <Text fontSize={"xl"} color={"gray.300"}>{course.rating}</Text>

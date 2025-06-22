@@ -91,7 +91,7 @@ const passwordResetOtpSender = async (request: Request, res: Response): Promise<
         }
 
 
-        const otp = Number.parseInt(otpGenerator.generate(4, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false }));
+        const otp = otpGenerator.generate(4, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false });
 
         try {
 
@@ -165,7 +165,7 @@ const passwordResetOtpSender = async (request: Request, res: Response): Promise<
 const checkOtpValidation = async (req: Request, res: Response): Promise<any> => {
 
     const schemas = z.object({
-        otp: z.number().int(),
+        code: z.string().length(4),
         email: z.string().email()
     })
     const body = schemas.safeParse(req.body);
@@ -181,7 +181,7 @@ const checkOtpValidation = async (req: Request, res: Response): Promise<any> => 
         return res.status(401).json({ errors: "invalid email or otp" });
     }
 
-    if (user.otp_code !== body.data.otp) {
+    if (user.otp_code !== body.data.code) {
         return res.status(401).json({ errors: "invalid email or otp" })
     }
 
@@ -197,4 +197,4 @@ const userStatus = (req: Request, res: Response) => { }
 
 
 
-export { register, login, passwordResetOtpSender ,checkOtpValidation}
+export { register, login, passwordResetOtpSender, checkOtpValidation }

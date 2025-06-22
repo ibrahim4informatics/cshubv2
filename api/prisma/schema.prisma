@@ -28,7 +28,7 @@ model User {
   id       Int      @id @default(autoincrement())
   email    String   @unique
   password String
-  otp_code Int?
+  otp_code String?
   role     Role     @default(STUDENT)
   profile  Profile?
 }

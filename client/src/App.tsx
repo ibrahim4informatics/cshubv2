@@ -1,11 +1,13 @@
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 
 
-import {ChakraProvider, createSystem, defaultConfig} from "@chakra-ui/react";
+import { ChakraProvider, createSystem, defaultConfig } from "@chakra-ui/react";
 import Courses from "./pages/Courses";
 import Welcome from "./pages/Welcome";
 import SingleCourse from "./pages/SingleCourse";
+import Login from "./pages/Login";
+import Forgot from "./pages/Forgot";
 function App() {
 
 
@@ -16,30 +18,44 @@ function App() {
 
   const routes = createBrowserRouter([
     {
-      path:"/",
-      element:<Welcome/>,
-      errorElement:<h1>Error</h1>
+      path: "/",
+      element: <Welcome />,
+      errorElement: <h1>Error</h1>
     },
 
 
-     {
-      path:"/courses",
-      element:<Courses/>,
-      errorElement:<h1>Error</h1>
+    {
+      path: "/login",
+      element: <Login />,
+      errorElement: <h1>Error</h1>
     },
 
 
-         {
-      path:"/courses/:id",
-      element:<SingleCourse/>,
-      errorElement:<h1>Error</h1>
+    {
+      path: "/forgot",
+      element: <Forgot />,
+      errorElement: <h1>Error</h1>
+    },
+
+
+    {
+      path: "/courses",
+      element: <Courses />,
+      errorElement: <h1>Error</h1>
+    },
+
+
+    {
+      path: "/courses/:id",
+      element: <SingleCourse />,
+      errorElement: <h1>Error</h1>
     },
   ])
 
   return (
 
     <ChakraProvider value={system} >
-      <RouterProvider router={routes}   />
+      <RouterProvider router={routes} />
     </ChakraProvider>
   )
 }
