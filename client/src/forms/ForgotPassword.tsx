@@ -1,4 +1,4 @@
-import { checkValidOtp, resetPasswordOtpSender } from "@/services/auth";
+import { changePassword, checkValidOtp, resetPasswordOtpSender } from "@/services/auth";
 import { Box, Button, Field, Heading, Input, InputGroup, PinInput, Text } from "@chakra-ui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
@@ -6,7 +6,8 @@ import { useForm, type SubmitHandler, Controller } from "react-hook-form";
 import { FaLock } from "react-icons/fa";
 import { MdOutlineAlternateEmail } from "react-icons/md";
 import { z } from "zod";
-
+import { Toaster, toaster } from "@/components/ui/toaster";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -69,7 +70,7 @@ const VerifyOtpForm: React.FC<{ disabled: boolean, email: string, setIsOtpVerifi
             .length(4, { message: "Pin must be 4 digits long" })
     }
     )
-    const { control, register, formState: { errors, isSubmitting }, handleSubmit, setError } = useForm({ resolver: zodResolver(schema) })
+    const { control, formState: { errors, isSubmitting }, handleSubmit, setError } = useForm({ resolver: zodResolver(schema) })
 
     const onSubmit: SubmitHandler<any> = (data) => {
         const d = { email, code: data.code.join("") };
@@ -122,6 +123,83 @@ const VerifyOtpForm: React.FC<{ disabled: boolean, email: string, setIsOtpVerifi
     )
 }
 
+
+const ChangePassword: React.FC<{ email: string, otp: string }> = ({ otp, email }) => {
+    const navigation = useNavigate();
+
+    const schema = z.object({
+        new_password: z.string().min(8, { message: "password is too short" }).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/, { message: "password should contain at least 1 capital letter,1 special character" }),
+        confirm_new_password: z.string(),
+
+    }).refine(data => data.new_password === data.confirm_new_password, { message: "the passwords does not match", path: ["confirm_new_password"] });
+
+    type Fields = z.infer<typeof schema>;
+
+    const { register, formState: { isSubmitting, errors }, handleSubmit } = useForm({ resolver: zodResolver(schema) });
+
+    const onSubmit: SubmitHandler<Fields> = async (data) => {
+        const d = { ...data, email, otp };
+        const promise = changePassword(d);
+
+        toaster.promise(promise, {
+            success: {
+                title: "Password Reset Done",
+                description: "your password changed successfully",
+                closable: true,
+                action: {
+                    label: "Login Now",
+                    onClick: () => navigation("/login")
+                },
+                duration: 2000
+            },
+            error: {
+                title: "Paassword Reset Fails",
+                description: "the password is not changed due to server or otp validity",
+                duration: 2000,
+                closable: true
+            },
+            loading: {
+                title: "Please Wait.",
+                description: "Changing password now!",
+                closable: false
+            }
+        })
+
+
+
+        return promise;
+    }
+    return (
+        <>
+            <Toaster />
+            <Field.Root my={4} required invalid={errors.new_password?.message ? true : false} disabled={isSubmitting}>
+                <Field.Label>New Password</Field.Label>
+                <InputGroup colorPalette={"blue"} startElement={<FaLock />} >
+                    <Input {...register("new_password")} type="password" />
+                </InputGroup>
+
+                <Box display={errors.new_password?.message ? "flex" : "none"} alignItems={"center"} gap={2}>
+                    <Field.ErrorIcon w={3} h={3} color={"red.600"} />
+                    <Field.ErrorText>{errors.new_password?.message}</Field.ErrorText>
+                </Box>
+            </Field.Root>
+
+            <Field.Root my={4} required invalid={errors.confirm_new_password?.message ? true : false} disabled={isSubmitting} >
+                <Field.Label>Confirm New Password</Field.Label>
+                <InputGroup colorPalette={"blue"} startElement={<FaLock />} >
+                    <Input {...register("confirm_new_password")} type="password" />
+                </InputGroup>
+
+                <Box display={errors.confirm_new_password?.message ? "flex" : "none"} alignItems={"center"} gap={2}>
+                    <Field.ErrorIcon w={3} h={3} color={"red.600"} />
+                    <Field.ErrorText>{errors.confirm_new_password?.message}</Field.ErrorText>
+                </Box>
+            </Field.Root>
+
+            <Button my={2} colorPalette={"gray"} variant={"ghost"} size={"lg"} w={"full"}>Send Code Again</Button>
+            <Button colorPalette={"blue"} size={"lg"} w={"full"} disabled={isSubmitting} onClick={handleSubmit(onSubmit)} loading={isSubmitting}>Change Password</Button></>
+    )
+}
 const ForgotPassword = () => {
 
 
@@ -145,23 +223,7 @@ const ForgotPassword = () => {
             }
 
 
-            {isOtpSent && isOtpVerified && <>
-                <Field.Root my={4} required invalid={false} >
-                    <Field.Label>New Password</Field.Label>
-                    <InputGroup colorPalette={"blue"} startElement={<FaLock />} >
-                        <Input type="email" />
-                    </InputGroup>
-                </Field.Root>
-
-                <Field.Root my={4} required invalid={false} >
-                    <Field.Label>Confirm New Password</Field.Label>
-                    <InputGroup colorPalette={"blue"} startElement={<FaLock />} >
-                        <Input type="email" />
-                    </InputGroup>
-                </Field.Root>
-
-                <Button my={2} colorPalette={"gray"} variant={"ghost"} size={"lg"} w={"full"}>Send Code Again</Button>
-                <Button colorPalette={"blue"} size={"lg"} w={"full"}>Change Password</Button></>
+            {isOtpSent && isOtpVerified && <ChangePassword email={email} otp={otp} />
             }
 
 

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { LoginUserSchema, RegisterUserSchema, UserResetPasswordSchema } from "../schemas/users";
+import { LoginUserSchema, RegisterUserSchema, UserResetPasswordSchema, UserSubmitPasswordSchema } from "../schemas/users";
 import { z } from "zod";
 import prisma from "../config/database";
 import { BcryptService } from "../config/bcrypt.service";
@@ -95,7 +95,7 @@ const passwordResetOtpSender = async (request: Request, res: Response): Promise<
 
         try {
 
-            await prisma.user.update({ where: { email: body.data.email }, data: { otp_code: otp } });
+            await prisma.user.update({ where: { email: body.data.email }, data: { otp_code: otp, reset_attempts: 0 } });
 
             //todo : send using nodemailer
 
@@ -181,7 +181,15 @@ const checkOtpValidation = async (req: Request, res: Response): Promise<any> => 
         return res.status(401).json({ errors: "invalid email or otp" });
     }
 
+    if (user.reset_attempts >= 3) {
+
+        await prisma.user.update({ where: { email: user.email }, data: { otp_code: null, reset_attempts: 0 } });
+        return res.status(401).json({ message: "you have entered the code to many times try again later" });
+
+    }
+
     if (user.otp_code !== body.data.code) {
+        await prisma.user.update({ where: { email: user.email }, data: { reset_attempts: user.reset_attempts + 1 } });
         return res.status(401).json({ errors: "invalid email or otp" })
     }
 
@@ -192,9 +200,39 @@ const checkOtpValidation = async (req: Request, res: Response): Promise<any> => 
 
 
 }
-const passwordResetSubmition = (req: Request, res: Response) => { }
+
+
+const passwordResetSubmition = async (req: Request, res: Response): Promise<any> => {
+
+    const body = UserSubmitPasswordSchema.safeParse(req.body);
+    if (!body.success) {
+        return res.status(400).json({ errors: errorExtractor(body.error) });
+    }
+
+    try {
+        const user = await prisma.user.findUnique({ where: { email: body.data.email } });
+
+        if (!user) return res.status(404).json({ errors: "invalid data" })
+        if (user.otp_code && user.otp_code === body.data.otp) {
+            await prisma.user.update({ where: { email: body.data.email }, data: { password: await BcryptService.hash(body.data.new_password), otp_code: null, reset_attempts: 0 } });
+            return res.status(200).json({ message: "password changed success" });
+        }
+
+        else {
+            await prisma.user.update({ where: { email: user.email }, data: { reset_attempts: user.reset_attempts + 1 } });
+            return res.status(401).json({ errors: "invalid otp code" });
+        }
+    }
+
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ message: err || "unknown internal server error" });
+    }
+
+
+}
 const userStatus = (req: Request, res: Response) => { }
 
 
 
-export { register, login, passwordResetOtpSender, checkOtpValidation }
+export { register, login, passwordResetOtpSender, checkOtpValidation, passwordResetSubmition }

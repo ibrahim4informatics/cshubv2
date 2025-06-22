@@ -33,6 +33,23 @@ const checkValidOtp = (data: any) => {
         }).catch(err => reject(err.response));
     })
 }
+
+
+const changePassword = (data: any) => {
+    return new Promise((resolve, reject) => {
+
+        axios.patch("/auth/reset", data).then(() => resolve("password has been updated")).catch((err) => {
+            if (err.response.status === 500) {
+                return reject("Sorry,Internal Server Error!");
+            }
+
+            else {
+                return reject("Invalid or Expired Token");
+            }
+        })
+
+    });
+}
 export {
-    loginUser, resetPasswordOtpSender, checkValidOtp
+    loginUser, resetPasswordOtpSender, checkValidOtp,changePassword
 }

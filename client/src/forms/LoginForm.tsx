@@ -6,7 +6,6 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { FaGithub, FaGoogle, FaLock } from "react-icons/fa";
-import { FaMessage } from "react-icons/fa6";
 import { MdOutlineAlternateEmail } from "react-icons/md";
 import { IoMdEye } from "react-icons/io";
 import { IoEyeOff } from "react-icons/io5";
@@ -19,11 +18,6 @@ const shcema = z.object({
 })
 
 const LoginForm: React.FC = () => {
-
-    // const credentials = useState<{ email: string, password: string }>({
-    //     email: "", password: ""
-    // });
-
     const [passwordHidden, setPasswordHidden] = useState<boolean>(false);
     const navigate = useNavigate();
 
@@ -33,7 +27,7 @@ const LoginForm: React.FC = () => {
     const submitFnc: SubmitHandler<any> = async (data) => {
 
         const promise = loginUser(data);
-        promise.then(res => {
+        promise.then(() => {
             return navigate("/profile")
         })
             .catch(() => {

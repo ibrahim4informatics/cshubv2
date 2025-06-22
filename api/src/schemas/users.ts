@@ -25,4 +25,11 @@ const UserResetPasswordSchema = z.object({
     email: z.string().email()
 });
 
-export { UserResetPasswordSchema,RegisterUserSchema,LoginUserSchema }
+const UserSubmitPasswordSchema = z.object({
+    email: z.string().email(),
+    otp: z.string().length(4),
+    new_password: z.string().min(8, { message: "password is too short" }).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/, { message: "password should contain at least 1 capital letter,1 special character" }),
+    confirm_new_password: z.string(),
+}).refine(data => data.new_password === data.confirm_new_password, { message: "password does not match", path: ["confirm_new_password"] });
+
+export { UserResetPasswordSchema, RegisterUserSchema, LoginUserSchema, UserSubmitPasswordSchema }
