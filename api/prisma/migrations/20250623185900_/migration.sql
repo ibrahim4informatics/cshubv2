@@ -3,6 +3,8 @@ CREATE TABLE `User` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
+    `reset_attempts` INTEGER NOT NULL DEFAULT 0,
+    `otp_code` VARCHAR(191) NULL,
     `role` ENUM('STUDENT', 'INSTRUCTOR', 'ADMIN') NOT NULL DEFAULT 'STUDENT',
 
     UNIQUE INDEX `User_email_key`(`email`),

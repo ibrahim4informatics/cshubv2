@@ -8,6 +8,7 @@ import Welcome from "./pages/Welcome";
 import SingleCourse from "./pages/SingleCourse";
 import Login from "./pages/Login";
 import Forgot from "./pages/Forgot";
+import Register from "./pages/Register";
 function App() {
 
 
@@ -27,6 +28,13 @@ function App() {
     {
       path: "/login",
       element: <Login />,
+      errorElement: <h1>Error</h1>
+    },
+
+
+    {
+      path: "/register",
+      element: <Register />,
       errorElement: <h1>Error</h1>
     },
 

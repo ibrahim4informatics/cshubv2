@@ -50,6 +50,18 @@ const changePassword = (data: any) => {
 
     });
 }
+
+const registerUser = (data: any) => {
+    return new Promise((resolve, reject) => {
+        axios.post("/auth/register", data).then(res => {
+            return resolve(res.data.status);
+        }).catch((err) => {
+
+            return reject(err.response.status); 
+
+        })
+    });
+}
 export {
-    loginUser, resetPasswordOtpSender, checkValidOtp,changePassword
+    loginUser, resetPasswordOtpSender, checkValidOtp, changePassword, registerUser
 }
